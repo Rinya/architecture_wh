@@ -47,7 +47,7 @@
 
 ### 5. Визуализация контекста системы — диаграмма С4
 
-![C4 диаграмма контекста](apps/diagrams/context/Warmhouse_Context.png
+![C4 диаграмма контекста](apps/diagrams/context/Warmhouse_Context.png)
 
 [C4 диаграмма контекста](apps/diagrams/context/Warmhouse_Context.png)
 
