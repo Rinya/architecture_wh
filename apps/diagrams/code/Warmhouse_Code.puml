@@ -1,0 +1,25 @@
+@startuml
+title Warmhouse Code Diagramm - Heating Monitoring Controller
+
+package "HeatingMonitoringController" {
+    class TemperatureMonitor {
+        - processTemperatureData()
+        - analyzeTemperature()
+    }
+    
+    class DeviceCommandDispatcher {
+        - sendCommandToDevice()
+    }
+    
+    class AlertManager {
+        - handleEmergency()
+        - notifyUser ()
+    }
+}
+
+' Отношения: предполагаем, что основной контроллер (HeatingMonitoringController) использует данные классы
+TemperatureMonitor --> DeviceCommandDispatcher : "uses it during processing"
+TemperatureMonitor --> AlertManager : "triggers alerts"
+DeviceCommandDispatcher --> AlertManager : "in case of an error"
+ 
+@enduml

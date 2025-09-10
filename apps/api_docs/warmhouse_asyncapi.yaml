@@ -1,0 +1,459 @@
+asyncapi: 3.0.0
+info:
+  title: Smart Home Heating and Lighting Monitoring & Schedule Services
+  version: 1.0.0
+  description: >
+    AsyncAPI specification for Heating Monitoring, Heating Schedule, Lighting
+    Monitoring and Lighting Schedule services in Smart Home.
+servers:
+  production:
+    host: rabbitmq.smarthome.example.com:5671
+    protocol: amqp
+    protocolVersion: 0-9-1
+    description: Production RabbitMQ Broker with TLS
+    tags:
+      - name: env:production
+        description: Продуктивная среда
+    security:
+      - $ref: '#/components/securitySchemes/userPassword'
+components:
+  securitySchemes:
+    userPassword:
+      type: userPassword
+channels:
+  heating-monitoring/devices:
+    address: heating-monitoring/devices
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: dev-001
+              current_temperature:
+                type: number
+                format: float
+                example: 22.5
+              status:
+                type: string
+                enum:
+                  - online
+                  - offline
+                example: online
+              last_reading:
+                type: string
+                format: date-time
+                example: 2023-10-15T11:00:00.000Z
+    description: Channel to receive updates about heating monitoring devices list.
+  heating-monitoring/devices/{deviceId}/telemetry:
+    address: heating-monitoring/devices/{deviceId}/telemetry
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              example: 2023-10-15T11:00:00.000Z
+            data:
+              type: object
+              properties:
+                temperature:
+                  type: number
+                  format: float
+                  example: 22.5
+                humidity:
+                  type: number
+                  format: float
+                  example: 45
+    description: Real-time telemetry data for heating device.
+    parameters:
+      deviceId:
+        description: Heating monitoring device ID
+  heating-monitoring/devices/{deviceId}/history:
+    address: heating-monitoring/devices/{deviceId}/history
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                example: 2023-10-01T12:00:00.000Z
+              data:
+                type: object
+                properties:
+                  temperature:
+                    type: number
+                    format: float
+                    example: 20
+    description: Historical telemetry data for heating device.
+    parameters:
+      deviceId:
+        description: Heating monitoring device ID
+  heating-monitoring/devices/{deviceId}/alert:
+    address: heating-monitoring/devices/{deviceId}/alert
+    messages:
+      publish.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            reason:
+              type: string
+              example: low_temperature
+            message:
+              type: string
+              example: Temperature dropped below 18°C
+            alert_id:
+              type: string
+              example: alert-001
+            status:
+              type: string
+              example: sent
+    description: Channel to publish alert messages related to heating devices.
+    parameters:
+      deviceId:
+        description: Heating monitoring device ID
+  heating-schedules:
+    address: heating-schedules
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: sch-001
+              schedule:
+                type: object
+                properties:
+                  periods:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start:
+                          type: string
+                          example: '08:00'
+                        temperature:
+                          type: number
+                          example: 22
+              active:
+                type: boolean
+                example: true
+    description: Channel to receive updates about heating schedules.
+  heating-schedules/{scheduleId}:
+    address: heating-schedules/{scheduleId}
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            id:
+              type: string
+              example: sch-001
+            schedule:
+              type: object
+              properties:
+                periods:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        example: '08:00'
+                      temperature:
+                        type: number
+                        example: 22
+            active:
+              type: boolean
+              example: true
+            created_at:
+              type: string
+              format: date-time
+              example: 2023-10-01T10:00:00.000Z
+    description: Channel for single heating schedule details.
+    parameters:
+      scheduleId:
+        description: Heating schedule ID
+  lighting-monitoring/devices:
+    address: lighting-monitoring/devices
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: ld-001
+              current_brightness:
+                type: integer
+                example: 80
+              status:
+                type: string
+                enum:
+                  - 'on'
+                  - 'off'
+                example: 'on'
+              last_reading:
+                type: string
+                format: date-time
+                example: 2023-10-15T11:00:00.000Z
+    description: Channel to receive updates about lighting monitoring devices list.
+  lighting-monitoring/devices/{deviceId}/telemetry:
+    address: lighting-monitoring/devices/{deviceId}/telemetry
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+              example: 2023-10-15T11:00:00.000Z
+            data:
+              type: object
+              properties:
+                brightness:
+                  type: integer
+                  example: 80
+                power_consumption:
+                  type: number
+                  format: float
+                  example: 10.5
+    description: Real-time telemetry data for lighting device.
+    parameters:
+      deviceId:
+        description: Lighting monitoring device ID
+  lighting-monitoring/devices/{deviceId}/history:
+    address: lighting-monitoring/devices/{deviceId}/history
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+                example: 2023-10-01T12:00:00.000Z
+              data:
+                type: object
+                properties:
+                  brightness:
+                    type: integer
+                    example: 70
+    description: Historical telemetry data for lighting device.
+    parameters:
+      deviceId:
+        description: Lighting monitoring device ID
+  lighting-monitoring/devices/{deviceId}/alert:
+    address: lighting-monitoring/devices/{deviceId}/alert
+    messages:
+      publish.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            reason:
+              type: string
+              example: power_failure
+            message:
+              type: string
+              example: Light bulb burned out
+            alert_id:
+              type: string
+              example: alert-002
+            status:
+              type: string
+              example: sent
+    description: Channel to publish alert messages related to lighting devices.
+    parameters:
+      deviceId:
+        description: Lighting monitoring device ID
+  lighting-scenarios:
+    address: lighting-scenarios
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: sc-001
+              name:
+                type: string
+                example: Evening Mode
+              settings:
+                type: object
+                properties:
+                  periods:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start:
+                          type: string
+                          example: '18:00'
+                        brightness:
+                          type: integer
+                          example: 50
+              active:
+                type: boolean
+                example: true
+    description: Channel to receive updates about lighting scenarios.
+  lighting-scenarios/{scenarioId}:
+    address: lighting-scenarios/{scenarioId}
+    messages:
+      subscribe.message:
+        contentType: application/json
+        payload:
+          type: object
+          properties:
+            id:
+              type: string
+              example: sc-001
+            name:
+              type: string
+              example: Evening Mode
+            settings:
+              type: object
+              properties:
+                periods:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        example: '18:00'
+                      brightness:
+                        type: integer
+                        example: 50
+            active:
+              type: boolean
+              example: true
+            created_at:
+              type: string
+              format: date-time
+              example: 2023-10-01T10:00:00.000Z
+    description: Channel for single lighting scenario details.
+    parameters:
+      scenarioId:
+        description: Lighting scenario ID
+operations:
+  heating-monitoring/devices.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/heating-monitoring~1devices'
+    summary: Receive list of heating monitoring devices for a house
+    messages:
+      - $ref: '#/channels/heating-monitoring~1devices/messages/subscribe.message'
+  heating-monitoring/devices/{deviceId}/telemetry.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/heating-monitoring~1devices~1{deviceId}~1telemetry'
+    summary: Receive telemetry data for heating device
+    messages:
+      - $ref: >-
+          #/channels/heating-monitoring~1devices~1{deviceId}~1telemetry/messages/subscribe.message
+  heating-monitoring/devices/{deviceId}/history.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/heating-monitoring~1devices~1{deviceId}~1history'
+    summary: Receive historical telemetry data for heating device
+    messages:
+      - $ref: >-
+          #/channels/heating-monitoring~1devices~1{deviceId}~1history/messages/subscribe.message
+  heating-monitoring/devices/{deviceId}/alert.publish:
+    action: receive
+    channel:
+      $ref: '#/channels/heating-monitoring~1devices~1{deviceId}~1alert'
+    summary: Publish alert for heating device
+    messages:
+      - $ref: >-
+          #/channels/heating-monitoring~1devices~1{deviceId}~1alert/messages/publish.message
+  heating-schedules.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/heating-schedules'
+    summary: Receive list of heating schedules for a heating system
+    messages:
+      - $ref: '#/channels/heating-schedules/messages/subscribe.message'
+  heating-schedules/{scheduleId}.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/heating-schedules~1{scheduleId}'
+    summary: Receive details of a heating schedule
+    messages:
+      - $ref: '#/channels/heating-schedules~1{scheduleId}/messages/subscribe.message'
+  lighting-monitoring/devices.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/lighting-monitoring~1devices'
+    summary: Receive list of lighting monitoring devices for a house
+    messages:
+      - $ref: '#/channels/lighting-monitoring~1devices/messages/subscribe.message'
+  lighting-monitoring/devices/{deviceId}/telemetry.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/lighting-monitoring~1devices~1{deviceId}~1telemetry'
+    summary: Receive telemetry data for lighting device
+    messages:
+      - $ref: >-
+          #/channels/lighting-monitoring~1devices~1{deviceId}~1telemetry/messages/subscribe.message
+  lighting-monitoring/devices/{deviceId}/history.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/lighting-monitoring~1devices~1{deviceId}~1history'
+    summary: Receive historical telemetry data for lighting device
+    messages:
+      - $ref: >-
+          #/channels/lighting-monitoring~1devices~1{deviceId}~1history/messages/subscribe.message
+  lighting-monitoring/devices/{deviceId}/alert.publish:
+    action: receive
+    channel:
+      $ref: '#/channels/lighting-monitoring~1devices~1{deviceId}~1alert'
+    summary: Publish alert for lighting device
+    messages:
+      - $ref: >-
+          #/channels/lighting-monitoring~1devices~1{deviceId}~1alert/messages/publish.message
+  lighting-scenarios.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/lighting-scenarios'
+    summary: Receive list of lighting scenarios for a lighting system
+    messages:
+      - $ref: '#/channels/lighting-scenarios/messages/subscribe.message'
+  lighting-scenarios/{scenarioId}.subscribe:
+    action: send
+    channel:
+      $ref: '#/channels/lighting-scenarios~1{scenarioId}'
+    summary: Receive details of a lighting scenario
+    messages:
+      - $ref: '#/channels/lighting-scenarios~1{scenarioId}/messages/subscribe.message'

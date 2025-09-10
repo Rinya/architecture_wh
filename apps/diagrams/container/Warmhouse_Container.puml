@@ -1,0 +1,115 @@
+@startuml Warmhouse Container Diagram
+title Warmhouse Container Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/adrianvlupu/C4-PlantUML/refs/heads/latest/C4_Container.puml
+
+Person(user, "User", "A user of house with sensors")
+Person(support, "Support", "Support team to solve user problems")
+
+Container(web_app, "Web Application", "React", "Allows users to view sensors data from house in web browser.")
+Container(mob_app, "Mobile Application", "Kotlin", "Allows users to view sensors data from house in smart phone.")
+Container(router, "Requests router", "Ingress", "Routing requests from web or mobile application.")
+
+Rel(user, web_app, "Uses", "HTTPS")
+Rel(user, mob_app, "Uses", "HTTPS")
+Rel(support, web_app, "Uses", "HTTPS")
+Rel(support, mob_app, "Uses", "HTTPS")
+
+Rel(web_app, router, "Routing web-apps requests.", "JSON/HTTP")
+Rel(mob_app, router, "Routing mob-apps requests.", "JSON/HTTP")
+
+System_Boundary(c1, "Heating Control") {
+    ContainerDb(ht_db, "Heating Database", "PostgreSQL", "Saves information about sensors and their data.")
+    Container(heating_service, "Heating Service", "Go", "Management of heating systems.")
+    Container(heating_monitoring_service, "Heating Monitoring Service", "Go", "Monitoring of temperature and condition of heating devices.")
+    Container(heating_schedule_service, "Heating Schedule Service", "Go", "Setting up heating schedules depending on user needs.")
+}
+
+Rel(router, heating_service, "Switching on and off the heating system.", "JSON/HTTP")
+'Rel(mob_app, heating_service, "Switching on and off the heating system.", "JSON/HTTP")
+Rel(heating_service, ht_db, "Saving the date and status of the heating system sensor.", "JDBC")
+
+Rel(router, heating_monitoring_service, "Providing information about the temperature in the heating system and the condition of heating devices.", "JSON/HTTP")
+'Rel(mob_app, heating_monitoring_service, "Providing information about the temperature in the heating system and the condition of heating devices.", "JSON/HTTP")
+Rel(heating_monitoring_service, ht_db, "Saving the date and status of the heating system sensor.", "JDBC")
+
+Rel(router, heating_schedule_service, "Provides the ability to adjust the heating operation.", "JSON/HTTP")
+'Rel(mob_app, heating_schedule_service, "Provides the ability to adjust the heating operation.", "JSON/HTTP")
+Rel(heating_schedule_service, ht_db, "Saving the date and status of the heating system sensor.", "JDBC")
+
+System_Boundary(c2, "Lighting Control") {
+    ContainerDb(lght_db, "Lighting Database", "PostgreSQL", "Saves information about sensors and their data.")
+    Container(lighting_service, "Lighting Service", "Go", "Control of lighting devices.")
+    Container(lighting_monitoring_service, "Lighting Monitoring Service", "Go", "Monitoring of the lighting condition.")
+    Container(lighting_schedule_service, "Lighting Schedule Service", "Go", "Setting up lighting scenarios.")
+}
+
+Rel(router, lighting_service, "Switching on and off the lighting.", "JSON/HTTP")
+Rel(lighting_service, lght_db, "Saving the data of changing status of lighting system.", "JDBC")
+
+Rel(router, lighting_monitoring_service, "Provides various lighting scenarios for choose.", "JSON/HTTP")
+Rel(lighting_monitoring_service, lght_db, "Saving the choose scenario of lighting.", "JDBC")
+
+Rel(router, lighting_schedule_service, "Provides information about lighting.", "JSON/HTTP")
+Rel(lighting_schedule_service, lght_db, "Saves information about the current lighting status.", "JDBC")
+
+System_Boundary(c3, "Observation Control") {
+    ContainerDb(obsv_db, "Observation Database", "PostgreSQL", "Saves information about sensors and their data.")
+    Container(observation_service, "Observation Service", "Go", "Control of cameras and video surveillance systems.")
+    Container(observation_stream_service, "Observation Streaming Service", "Go", "Remote access to the video stream and event notifications.")
+    Container(observation_process_service, "Observation Processing Service", "Go", "Storage and processing of video recordings.")
+}
+
+Rel(router, observation_service, "Providing access to the settings of cameras and video surveillance systems.", "JSON/HTTP")
+Rel(observation_service, obsv_db, "Saving the data about changed configuration.", "JDBC")
+
+Rel(router, observation_stream_service, "Providing remote access to the video stream and processing various events.", "JSON/HTTP")
+Rel(observation_stream_service, obsv_db, "Saving data about events that occurred and who gained access to the video stream.", "JDBC")
+
+Rel(router, observation_process_service, "Provides services for processing video streams.", "JSON/HTTP")
+Rel(observation_process_service, obsv_db, "Saving the video streams and information about processing.", "JDBC")
+
+System_Boundary(c4, "Gate management Control") {
+    ContainerDb(gtm_db, "Gate management Database", "PostgreSQL", "Saves gate management data.")
+    Container(gate_management_service, "Gate management Service", "Go", "Automatic gate control.")
+    Container(access_monitoring_service, "Access and Monitoring Service", "Go", "Setting up access and monitoring the gate status.")
+    Container(integration_service, "Integration Service", "Go", "Integration with other security systems.")
+}
+
+Rel(router, gate_management_service, "Opens and closes an automatic gate.", "JSON/HTTP")
+Rel(gate_management_service, gtm_db, "Saves data about the use of automatic gates.", "JDBC")
+
+Rel(router, access_monitoring_service, "Provides services for setting up access and monitoring the gate status.", "JSON/HTTP")
+Rel(access_monitoring_service, gtm_db, "Saves data about changing access to the gate as well as information about the gate status.", "JDBC")
+
+Rel(router, integration_service, "Provides services for integration with other security systems.", "JSON/HTTP")
+Rel(integration_service, gtm_db, "Saves information about integration with other security systems.", "JDBC")
+
+
+System_Boundary(c5, "Device management Control") {
+    ContainerDb(dvm_db, "Device management Database", "PostgreSQL", "Saves gate management data.")
+    Container(device_management_service, "Device management Service", "Go", "Connect and manage different types of devices.")
+    Container(processing_service, "Processing and Integration Service", "Go", "Processing data from devices and integration with other domains.")
+    Container(support_service, "Supporting Service", "Go", "Support for connecting new, as yet unknown devices, which ensures the flexibility of the system.")
+}
+
+Rel(router, device_management_service, "Provides services for attaching and managing various types of devices.", "JSON/HTTP")
+Rel(device_management_service, dvm_db, "Saving data about connected devices and device settings.", "JDBC")
+
+Rel(router, processing_service, "Provides services for processing data from devices and integration with other domains.", "JSON/HTTP")
+Rel(processing_service, dvm_db, "Saving devices data and integration settings.", "JDBC")
+
+Rel(router, support_service, "Provides services for attaching new devices.", "JSON/HTTP")
+Rel(support_service, dvm_db, "Saving data about new devices.", "JDBC")
+
+System_Boundary(c6, "Authorization Control") {
+    ContainerDb(auth_db, "Authorization Database", "PostgreSQL", "Saves authorization data.")
+    Container(authorization_service, "Authorization Service", "Go", "Auhtentications and authorization.")
+}
+
+Rel(router, authorization_service, "Provides services authenticate and authorization.", "JSON/HTTP")
+Rel(authorization_service, auth_db, "Saving data about authorization.", "JDBC")
+
+@enduml
