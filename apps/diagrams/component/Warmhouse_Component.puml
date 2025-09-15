@@ -1,0 +1,64 @@
+@startuml Warmhouse Component Diagram
+title Warmhouse Component Diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/adrianvlupu/C4-PlantUML/refs/heads/latest/C4_Component.puml
+
+Container(router, "Requests router", "Ingress", "Routing requests from web or mobile application.")
+
+Container_Boundary(hcb, "Heating API") {
+  Container(heating_controller, "Heating Controller", "Component: Go Service", "Management of heating systems.")
+  Container(heating_monitoring_controller, "Heating Monitoring Controller", "Component: Go Service", "Monitoring of temperature and condition of heating devices.")
+  Container(heating_schedule_controller, "Heating Schedule Controller", "Component: Go Service", "Setting up heating schedules depending on user needs.")
+  
+  Container(temperature_monitor, "Temperature Monitor", "Component: Go", "A component that processes and analyzes data from temperature sensors.")
+  Container(heating_scheduler, "Heating Scheduler", "Component: Go", "Managing heating on/off schedules")
+  Container(temperature_regulator, "Temperature Regulator", "Component: Go", "The logic of maintaining the set temperature.")
+  Container(alert_manager, "Alert Manager", "Component: Go", "Emergency handling and user notification.")
+  Container(device_command_dispatcher, "Device Command Dispatcher", "Component: Go", "Sending commands to devices.")
+}
+
+ContainerDb(ht_db, "Heating Database", "PostgreSQL", "Saves information about sensors and their data.")
+
+Rel(router, heating_controller, "Switching on and off the heating system.")
+Rel(router, heating_monitoring_controller, "Providing information about the temperature in the heating system and the condition of heating devices.")
+Rel(router, heating_schedule_controller, "Provides the ability to adjust the heating operation.")
+
+Rel(heating_controller, temperature_regulator, "Receiving data from temperature sensors.")
+Rel(heating_controller, device_command_dispatcher, "Sending commands to devices.")
+Rel(heating_monitoring_controller, temperature_monitor, "Temperature change.")
+Rel(heating_schedule_controller, heating_scheduler, "Heating on/off.")
+Rel(heating_schedule_controller, alert_manager, "Listening to events.")
+
+Rel(temperature_regulator, ht_db, "Reads/Writes to\n[SQL/TCP]")
+Rel(temperature_monitor, ht_db, "Reads/Writes to\n[SQL/TCP]")
+Rel(heating_scheduler, ht_db, "Reads/Writes to\n[SQL/TCP]")
+Rel(alert_manager, ht_db, "Reads/Writes to\n[SQL/TCP]")
+
+
+Container_Boundary(acb, "Auth API") {
+  Container(signin_controller, "Sign In Controller", "Component: Go Service", "Provides services authenticate and authorization.")
+  Container(register_controller, "Register Controller", "Component: Go Service", "Monitoring of temperature and condition of heating devices.")
+  Container(reset_password_controller, "Reset Password Controller", "Component: Go Service", "Setting up heating schedules depending on user needs.")
+  
+  Container(security_component, "Security Component", "Component: Go", "Provides functionality related to signing in, changing password, etc.")
+  Container(notify_component, "Notification Component", "Component: Go", "Sends notification to user.")
+}
+
+Rel(router, signin_controller, "Switching on and off the heating system.")
+Rel(router, register_controller, "Providing information about the temperature in the heating system and the condition of heating devices.")
+Rel(router, reset_password_controller, "Provides the ability to adjust the heating operation.")
+
+Rel(signin_controller, security_component, "Receiving data from temperature sensors.")
+Rel(register_controller, security_component, "Register new user.")
+Rel(reset_password_controller, security_component, "Reset password.")
+Rel(reset_password_controller, notify_component, "Sends notification.")
+
+System_Ext(email_system, "E-mail system", "Some external e-mail system.")
+ContainerDb(auth_db, "Authorization Database", "PostgreSQL", "Saves authorization data.")
+
+Rel(notify_component, email_system, "Makes API calls to\n[HTTPS]")
+Rel(security_component, auth_db, "Reads/Writes to\n[SQL/TCP]")
+
+@enduml

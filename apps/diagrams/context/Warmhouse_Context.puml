@@ -1,0 +1,15 @@
+@startuml
+title Warmhouse Context Diagram
+
+top to bottom direction
+
+!includeurl http://raw.githubusercontent.com/adrianvlupu/C4-PlantUML/refs/heads/latest/C4_Context.puml
+
+Person(user, "User", "A user of house with sensors")
+System(warmHouseSystem, "WarmHouseSystem", "Heating control system")
+
+System_Ext(sensors, "Sensors API", "API for Sensors", "Uses REST API, JSON data format")
+Rel(user, warmHouseSystem, "Uses the system")
+Rel(warmHouseSystem, sensors, "Get sensors data")
+
+@enduml

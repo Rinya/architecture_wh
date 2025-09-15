@@ -1,0 +1,408 @@
+openapi: 3.0.3
+info:
+  title: Smart Home Heating and Lighting Services API
+  version: 1.0.0
+  description: >
+    REST API for Heating Service and Lighting Service in Smart Home system.
+servers:
+  - url: https://api.smarthome.example.com/api/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HeatingSystem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: hs-001
+        name:
+          type: string
+          example: Main Heating
+        house_id:
+          type: string
+          example: h-123
+        status:
+          type: string
+          enum: [active, inactive]
+          example: active
+        created_at:
+          type: string
+          format: date-time
+          example: 2023-10-01T10:00:00Z
+        devices:
+          type: array
+          items:
+            type: string
+          example: ["dev-001"]
+      required:
+        - id
+        - name
+        - house_id
+        - status
+        - created_at
+
+    HeatingSystemCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: New Heating
+        house_id:
+          type: string
+          example: h-123
+        status:
+          type: string
+          enum: [active, inactive]
+          default: inactive
+          example: active
+      required:
+        - name
+        - house_id
+
+    HeatingSystemUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Heating Name
+        status:
+          type: string
+          enum: [active, inactive]
+          example: inactive
+
+    LightingDevice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: ld-001
+        lighting_system_id:
+          type: string
+          example: ls-001
+        serial_number:
+          type: string
+          example: SN123
+        status:
+          type: string
+          enum: [on, off]
+          example: on
+        brightness:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 80
+        created_at:
+          type: string
+          format: date-time
+          example: 2023-10-01T10:00:00Z
+      required:
+        - id
+        - status
+        - brightness
+        - created_at
+
+    LightingDeviceCreate:
+      type: object
+      properties:
+        lighting_system_id:
+          type: string
+          example: ls-001
+        serial_number:
+          type: string
+          example: SN123
+        status:
+          type: string
+          enum: [on, off]
+          default: off
+          example: on
+      required:
+        - lighting_system_id
+        - serial_number
+
+    LightingDeviceUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [on, off]
+          example: off
+        brightness:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 50
+
+security:
+  - BearerAuth: []
+
+paths:
+  /heating-systems:
+    get:
+      summary: Get list of heating systems
+      description: Returns all heating systems filtered by optional query parameters.
+      parameters:
+        - in: query
+          name: house_id
+          schema:
+            type: string
+          description: Filter by house ID
+        - in: query
+          name: user_id
+          schema:
+            type: string
+          description: Filter by user ID
+      responses:
+        '200':
+          description: List of heating systems
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HeatingSystem'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: Create a new heating system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeatingSystemCreate'
+      responses:
+        '201':
+          description: Heating system created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingSystem'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+  /heating-systems/{id}:
+    get:
+      summary: Get heating system by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Heating system ID
+      responses:
+        '200':
+          description: Heating system object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingSystem'
+        '404':
+          description: Heating system not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    put:
+      summary: Update heating system by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Heating system ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeatingSystemUpdate'
+      responses:
+        '200':
+          description: Updated heating system object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeatingSystem'
+        '400':
+          description: Bad request
+        '404':
+          description: Heating system not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Delete heating system by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Heating system ID
+      responses:
+        '204':
+          description: Heating system deleted successfully
+        '404':
+          description: Heating system not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+  /lighting-devices:
+    get:
+      summary: Get list of lighting devices
+      parameters:
+        - in: query
+          name: house_id
+          schema:
+            type: string
+          description: Filter by house ID
+      responses:
+        '200':
+          description: List of lighting devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LightingDevice'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    post:
+      summary: Create a new lighting device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LightingDeviceCreate'
+      responses:
+        '201':
+          description: Lighting device created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightingDevice'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+  /lighting-devices/{id}:
+    get:
+      summary: Get lighting device by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Lighting device ID
+      responses:
+        '200':
+          description: Lighting device object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightingDevice'
+        '404':
+          description: Lighting device not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    put:
+      summary: Update lighting device by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Lighting device ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LightingDeviceUpdate'
+      responses:
+        '200':
+          description: Updated lighting device object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightingDevice'
+        '400':
+          description: Bad request
+        '404':
+          description: Lighting device not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
+
+    delete:
+      summary: Delete lighting device by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Lighting device ID
+      responses:
+        '204':
+          description: Lighting device deleted successfully
+        '404':
+          description: Lighting device not found
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+      security:
+        - BearerAuth: []
