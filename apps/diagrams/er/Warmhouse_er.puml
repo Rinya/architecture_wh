@@ -1,0 +1,277 @@
+@startuml ER Diagram for Smart Home System
+
+' Entities with attributes based on the defined schema
+
+entity User {
+  * id : INTEGER
+  --
+  username : VARCHAR
+  email : VARCHAR
+  is_active : BOOLEAN
+  status : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  version : INTEGER
+}
+
+entity House {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  address : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity Device {
+  * id : INTEGER
+  --
+  type_id : INTEGER
+  house_id : INTEGER
+  serial_number : VARCHAR
+  status : VARCHAR
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  version : INTEGER
+}
+
+entity DeviceType {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  description : TEXT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  version : INTEGER
+}
+
+entity Module {
+  * id : INTEGER
+  --
+  device_id : INTEGER
+  name : VARCHAR
+  type : VARCHAR
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity TelemetryData {
+  * id : INTEGER
+  --
+  device_id : INTEGER
+  timestamp : TIMESTAMP
+  data : JSON
+  created_at : TIMESTAMP
+}
+
+entity HeatingSystem {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  house_id : INTEGER
+  status : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity HeatingSchedule {
+  * id : INTEGER
+  --
+  heating_system_id : INTEGER
+  schedule : JSON
+  active : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity HeatingDevice {
+  * id : INTEGER
+  --
+  heating_system_id : INTEGER
+  house_id : INTEGER
+  serial_number : VARCHAR
+  status : VARCHAR
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity TemperatureSensor {
+  * id : INTEGER
+  --
+  heating_device_id : INTEGER
+  current_temperature : DECIMAL
+  last_reading : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity LightingSystem {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  house_id : INTEGER
+  status : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity LightingScenario {
+  * id : INTEGER
+  --
+  lighting_system_id : INTEGER
+  name : VARCHAR
+  settings : JSON
+  active : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity LightingDevice {
+  * id : INTEGER
+  --
+  lighting_system_id : INTEGER
+  house_id : INTEGER
+  serial_number : VARCHAR
+  status : VARCHAR
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity SurveillanceSystem {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  house_id : INTEGER
+  status : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity Camera {
+  * id : INTEGER
+  --
+  surveillance_system_id : INTEGER
+  house_id : INTEGER
+  serial_number : VARCHAR
+  status : VARCHAR
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity VideoRecording {
+  * id : INTEGER
+  --
+  camera_id : INTEGER
+  start_time : TIMESTAMP
+  end_time : TIMESTAMP
+  file_path : VARCHAR
+  created_at : TIMESTAMP
+}
+
+entity EventNotification {
+  * id : INTEGER
+  --
+  surveillance_system_id : INTEGER
+  event_type : VARCHAR
+  message : TEXT
+  timestamp : TIMESTAMP
+  created_at : TIMESTAMP
+}
+
+entity GateControl {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  house_id : INTEGER
+  status : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity GateDevice {
+  * id : INTEGER
+  --
+  gate_control_id : INTEGER
+  house_id : INTEGER
+  serial_number : VARCHAR
+  current_state : VARCHAR
+  state_changed_at : TIMESTAMP
+  installed_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity AccessSchedule {
+  * id : INTEGER
+  --
+  gate_control_id : INTEGER
+  user_id : INTEGER
+  schedule : JSON
+  active : BOOLEAN
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity GateStateHistory {
+  * id : INTEGER
+  --
+  gate_device_id : INTEGER
+  previous_state : VARCHAR
+  new_state : VARCHAR
+  changed_at : TIMESTAMP
+  reason : TEXT
+}
+
+entity Role {
+  * id : INTEGER
+  --
+  name : VARCHAR
+  description : TEXT
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+}
+
+entity Credential {
+  * id : INTEGER
+  --
+  user_id : INTEGER
+  token : VARCHAR
+  expires_at : TIMESTAMP
+  created_at : TIMESTAMP
+}
+
+' Relationships (based on defined links)
+
+User }o--o{ House : "N:M (owns via HouseOwners)"
+House --o Device : "1:N (contains)"
+House --o HeatingSystem : "1:N (contains)"
+House --o LightingSystem : "1:N (contains)"
+House --o SurveillanceSystem : "1:N (contains)"
+House --o GateControl : "1:N (contains)"
+
+DeviceType --o Device : "1:N (defines)"
+Device --o Module : "1:N (has)"
+Device --o TelemetryData : "1:N (generates)"
+
+HeatingSystem --o HeatingSchedule : "1:N (manages)"
+HeatingSystem --o HeatingDevice : "1:N (controls)"
+HeatingDevice --o TemperatureSensor : "1:N (has)"
+HeatingDevice --o TelemetryData : "1:N (generates)"
+
+LightingSystem --o LightingScenario : "1:N (manages)"
+LightingSystem --o LightingDevice : "1:N (controls)"
+LightingDevice --o TelemetryData : "1:N (generates)"
+
+SurveillanceSystem --o Camera : "1:N (includes)"
+SurveillanceSystem --o EventNotification : "1:N (generates)"
+Camera --o VideoRecording : "1:N (records)"
+Camera --o TelemetryData : "1:N (generates)"
+
+GateControl --o GateDevice : "1:N (controls)"
+GateControl --o AccessSchedule : "1:N (defines)"
+GateDevice --o GateStateHistory : "1:N (has history)"
+GateDevice --o TelemetryData : "1:N (generates)"
+AccessSchedule --o User : "N:1 (assigned to)"
+
+User }o--o{ Role : "N:M (via UserRole)"
+User --o Credential : "1:N (has)"
+
+@enduml
